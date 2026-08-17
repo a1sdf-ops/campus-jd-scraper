@@ -1,0 +1,4 @@
+# 字节校招 JD 抓取（adapters/bytedance.py）需要
+curl_cffi>=0.11,<0.16
+
+# nowcoder_schedule.py 纯标准库（urllib/json），无需第三方依赖
