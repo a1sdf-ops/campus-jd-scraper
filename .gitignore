@@ -13,6 +13,10 @@ env/
 # 运行输出
 jd_output/
 *_筛选结果*/
+_牛客日程_*.txt
+
+# 私有配置（含个人投递关键词）
+config.json
 
 # 系统 / IDE
 .DS_Store

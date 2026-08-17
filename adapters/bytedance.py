@@ -1,6 +1,6 @@
 """
 ByteDance campus recruitment adapter.
-Uses curl_cffi to bypass anti-bot protection with TLS fingerprint impersonation.
+Uses curl_cffi with a Chrome-like TLS fingerprint for reliable requests to the public API.
 """
 from .base import BaseAdapter, JobPost
 from curl_cffi import requests

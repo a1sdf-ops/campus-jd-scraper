@@ -1,0 +1,12 @@
+{
+  "_comment": "示例配置。复制为 config.json 并填入你自己的关键词（config.json 已被 gitignore，不会提交到仓库）",
+  "tasks": [
+    {
+      "company": "bytedance",
+      "keywords": [
+        "AI Agent", "RAG", "大模型应用", "智能体", "LLM应用", "MCP"
+      ],
+      "category": "后端"
+    }
+  ]
+}

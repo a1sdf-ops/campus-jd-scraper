@@ -14,17 +14,17 @@
 
 ## 核心方案
 
-### 1. 抓取 —— 适配器模式 + TLS 指纹伪装
+### 1. 抓取 —— 适配器模式
 
 ```
 adapters/
 ├── base.py         # BaseAdapter 抽象基类 + JobPost 统一数据模型
-├── bytedance.py    # 字节适配器（curl_cffi 伪造 TLS 指纹绕过反爬）
+├── bytedance.py    # 字节适配器（curl_cffi 请求指纹模拟）
 └── __init__.py     # 适配器注册表
 ```
 
 - **适配器模式**：每家公司 API 结构、反爬策略不同，各自实现 `fetch()`、注册进 `ADAPTERS` 即可扩展，不破坏已有代码
-- **TLS 指纹伪装**：`curl_cffi` 的 `impersonate="chrome131"` 把请求伪装成真实 Chrome，绕过官网的 TLS 反爬检测
+- **请求指纹模拟**：`curl_cffi` 的 `impersonate="chrome131"` 让请求以真实 Chrome 的 TLS 指纹发出，提高公开招聘页请求的成功率（仅抓取公开的校招信息，供个人求职筛选使用）
 
 ### 2. 筛选 —— 5 维匹配度评分
 
@@ -50,13 +50,20 @@ adapters/
 - `2-候选/` — 未被排除但分数较低
 - `3-已排除/` — 附排除原因
 
+### 4. 牛客聚合源（日程 + 职位）
+
+中厂不打广告，但会在牛客校招频道发岗位。两个附加脚本直接读牛客公开 SSR 页面内嵌的 `__INITIAL_STATE__`，纯标准库、无需登录：
+
+- **`nowcoder_schedule.py`** — 秋招日程表：抓各公司网申开始时间、自动判定状态（未开始 / 进行中 / 已结束），按个人画像（方向 + 城市 + 专业弹性 + 内推码）打分推荐，每日快照并对比「今天新开的公司」
+- **`nowcoder_jobs.py`** — 职位过滤：按 Agent / 大模型应用方向过滤牛客职位，找出「哪些公司真在招这类岗」
+
 ---
 
 ## 用 Claude Code 协作的方式
 
 - **痛点先于代码**：先确认「岗位多、筛不过来」是真实问题，再动手
 - **AI 辅助设计**：适配器模式、5 维评分模型的结构由 AI 提出，人工确认
-- **人工把控关键判断**：反爬方式选型、评分维度定义、以及「不涉及模型训练」这类否定词边界 case——业务判断由人拍板，AI 负责实现
+- **人工把控关键判断**：请求方式选型、评分维度定义、以及「不涉及模型训练」这类否定词边界 case——业务判断由人拍板，AI 负责实现
 
 这种「AI 出速度、人出判断」的分工，是这个工具能落地的关键。
 
@@ -70,8 +77,8 @@ pip install curl_cffi
 # 1. 抓取（字节）
 python scraper.py bytedance -k "Agent" -c 后端
 
-# 2. 批量抓取
-python scraper.py batch config.json
+# 2. 批量抓取（先复制 config.example.json 为 config.json 并填你的关键词）
+python scraper.py batch config.example.json
 
 # 3. 筛选评分
 python filter_jds.py -i jd_output -o jd_output_筛选结果
@@ -83,18 +90,22 @@ python filter_jds.py -i jd_output -o jd_output_筛选结果
 
 ```
 校招JD抓取工具/
-├── README.md          # 本文件
-├── scraper.py         # CLI 入口
-├── filter_jds.py      # 5 维评分筛选器
-├── config.json        # 批量抓取配置
+├── README.md               # 本文件
+├── scraper.py              # CLI 入口（单公司 / batch）
+├── filter_jds.py           # 5 维评分筛选器
+├── fetch_jds.py            # 快捷抓取（读 config）
+├── nowcoder_schedule.py    # 牛客秋招日程：公司+开始时间+画像推荐
+├── nowcoder_jobs.py        # 牛客职位：Agent/大模型方向过滤
+├── config.example.json     # 配置模板（复制为 config.json 使用）
+├── requirements.txt
 └── adapters/
-    ├── base.py        # BaseAdapter + JobPost
-    ├── bytedance.py   # 字节适配器
-    └── __init__.py    # 注册表
+    ├── base.py             # BaseAdapter + JobPost
+    ├── bytedance.py        # 字节适配器
+    └── __init__.py         # 注册表
 ```
 
 ---
 
 ## 技术栈
 
-Python · curl_cffi（TLS 指纹伪装）· 适配器模式 · argparse
+Python · curl_cffi（请求指纹模拟）· 适配器模式 · 牛客公开页面解析（标准库）
